@@ -151,10 +151,10 @@ const productsData = {
     { name: 'Salmão ao molho maracujá', price: 92.00, description: 'Salmão grelhado com molho de maracujá, arroz e gratinado de batatas', subcategory: 'Salmão' },
     { name: 'Salmão ao molho alcaparras', price: 116.00, description: 'Salmão grelhado, molho com alcaparras (molho branco com alcaparras), champignon, batata souté e arroz', subcategory: 'Salmão' },
     
-    { name: 'Tilápia a São Luiz', price: 72.00, description: 'Filé de tilápia a milanesa, cenoura, cebola, brócolis grelhados e arroz', subcategory: 'Tilápia' },
+    { name: 'Tilápia da Casa', price: 72.00, description: 'Filé de tilápia a milanesa, cenoura, cebola, brócolis grelhados e arroz', subcategory: 'Tilápia' },
     { name: 'Tilápia a siciliana', price: 65.00, description: 'Filé de tilápia grelhado crisp de cebola (cebola meia lua frita), arroz e batata chips', subcategory: 'Tilápia' },
     
-    { name: 'Traíra a São Luiz', price: 87.00, description: 'Filé de traíra a milanesa acompanhada de legumes cozidos, ovos e arroz.', subcategory: 'Traíra' },
+    { name: 'Traíra da Casa', price: 87.00, description: 'Filé de traíra a milanesa acompanhada de legumes cozidos, ovos e arroz.', subcategory: 'Traíra' },
     { name: 'Traíra a siciliana', price: 76.00, description: 'Filé de traíra frita, crisp de cebola (cebola meia lua frita), batata chips, molho com limão e arroz', subcategory: 'Traíra' },
     { name: 'Traíra ao molho escabeche', price: 73.00, description: 'Filé de traíra frita, arroz e molho ao escabeche (tomate e cebola)', subcategory: 'Traíra' },
     { name: 'Traíra ao molho de camarão', price: 113.00, description: 'Filé de traíra frita, de molho de camarão e arroz', subcategory: 'Traíra' }
@@ -184,10 +184,10 @@ const productsData = {
   'Massas & Risotos': [
     { name: 'Espaguete á bolonhesa', price: 57.00, description: 'Espaguete artesanal, molho vermelho, queijo e iscas de filé', subcategory: 'Massas Artesanais' },
     { name: 'Espaguete á Carbonara', price: 62.00, description: 'Espaguete artesanal, bacon, gemas, molho branco e parmesão', subcategory: 'Massas Artesanais' },
-    { name: 'Espaguete á São Luiz', price: 68.00, description: 'Espaguete artesanal, molho branco, com iscas de filé e champignon', subcategory: 'Massas Artesanais' },
+    { name: 'Espaguete da Casa', price: 68.00, description: 'Espaguete artesanal, molho branco, com iscas de filé e champignon', subcategory: 'Massas Artesanais' },
     { name: 'Espaguete ao funghi', price: 85.00, description: 'Espaguete artesanal, molho branco, funghi grelhado e iscas de filé', subcategory: 'Massas Artesanais' },
     { name: 'Espaguete camarão', price: 92.00, description: 'Espaguete artesanal, molho branco, camarão grelhado', subcategory: 'Massas Artesanais' },
-    { name: 'Fettuccine São Luiz', price: 85.00, description: 'Fettuccine artesanal, rúcula, tomate seco, escalopes de filé e molho 4 queijos.', subcategory: 'Massas Artesanais' },
+    { name: 'Fettuccine da Casa', price: 85.00, description: 'Fettuccine artesanal, rúcula, tomate seco, escalopes de filé e molho 4 queijos.', subcategory: 'Massas Artesanais' },
     { name: 'Nhoque á bolonhesa', price: 65.00, description: 'Nhoque de batata, molho de tomate e carne', subcategory: 'Massas Artesanais' },
     { name: 'Sorrentino de presunto e queijo', price: 65.00, description: 'Sorrentino de presunto e queijo e molho Rosse', subcategory: 'Massas Artesanais' },
     { name: 'Sorrentino de presunto e queijo á bolonhesa', price: 70.00, description: 'Sorrentino de presunto e queijo, molho vermelho e iscas de filé', subcategory: 'Massas Artesanais' },
@@ -202,7 +202,7 @@ const productsData = {
     { name: 'Risoto de gorgonzola c/ filé * Empratado, porção p/1 pessoa', price: 64.00, description: 'Arroz arbóreo, cebola, alho poro, gorgonzola, manteiga, parmesão, vinho branco e filé grelhado', subcategory: 'Risotos Especiais' }
   ],
   'Lanches & Pizzas': [
-    { name: 'Bauru São Luiz', price: 44.00, description: 'Iscas de filé (200g), queijo, presunto, alface, tomate, milho, ervilha, Fritas e ovo', subcategory: 'Lanches Completos' },
+    { name: 'Bauru da Casa', price: 44.00, description: 'Iscas de filé (200g), queijo, presunto, alface, tomate, milho, ervilha, Fritas e ovo', subcategory: 'Lanches Completos' },
     { name: 'Xis Bacon', price: 48.00, description: 'Bacon, presunto, queijo, milho, ervilha, tomate, alface, maionese, ovo', subcategory: 'Lanches Completos' },
     { name: 'Torrada Simples', price: 16.00, description: 'Presunto e queijo', subcategory: 'Lanches Completos' },
     { name: 'Torrada completa', price: 24.00, description: 'Presunto, queijo, tomate, alface, ovo', subcategory: 'Lanches Completos' },
@@ -241,13 +241,13 @@ async function run() {
       console.log('Chave do tipo PUBLISHABLE detectada. Tentando autenticação como administrador...')
       
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: 'administrador@hotelsaoluiz.com',
-        password: 'hotelsaoluiz'
+        email: 'admin@admin.com',
+        password: 'admin123'
       })
 
       if (authError) {
         console.warn('Alerta: Não foi possível autenticar localmente:', authError.message)
-        console.log('Dica: Certifique-se de criar o usuário "administrador@hotelsaoluiz.com" com a senha "hotelsaoluiz" no painel Authentication do Supabase.')
+        console.log('Dica: Certifique-se de criar o usuário "admin@admin.com" com a senha "admin123" no painel Authentication do Supabase.')
         console.log('Continuando tentativa direta no banco de dados (pode falhar se RLS estiver ativo)...')
       } else {
         console.log('Autenticação de administrador realizada com sucesso! Token de sessão obtido.')

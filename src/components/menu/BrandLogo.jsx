@@ -1,9 +1,9 @@
 import React from 'react'
 
-export const HotelLogo = ({ size = 52 }) => (
+export const BrandLogo = ({ size = 52 }) => (
   <img 
     src="/logo.svg" 
-    alt="Hotel São Luiz Logo" 
+    alt="Logomarca do Estabelecimento" 
     width={size}
     height={size}
     style={{
@@ -15,4 +15,4 @@ export const HotelLogo = ({ size = 52 }) => (
   />
 )
 
-export default HotelLogo
+export default BrandLogo

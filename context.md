@@ -1,16 +1,16 @@
-# Contexto Técnico e Arquitetura - Cardápio HSL
+# Contexto Técnico e Arquitetura - Cardápio Digital White Label
 
-Este documento fornece um mapeamento detalhado, técnico e arquitetural do projeto **Cardápio HSL** (Hotel São Luiz). Ele serve como a única fonte de verdade para desenvolvedores e agentes de IA compreenderem a estrutura de dados, o fluxo de dados, a identidade visual e as regras de negócio implementadas no sistema.
+Este documento fornece um mapeamento detalhado, técnico e arquitetural do projeto **Cardápio Digital White Label**. Ele serve como a única fonte de verdade para desenvolvedores e agentes de IA compreenderem a estrutura de dados, o fluxo de dados, a identidade visual e as regras de negócio implementadas no sistema.
 
 ---
 
 ## 1. Visão Geral do Projeto e Identidade Visual
 
-O **Cardápio HSL** é um sistema composto por um cardápio digital voltado para os hóspedes e clientes do restaurante do hotel, e por um painel de administração robusto voltado para os administradores gerenciarem pratos, categorias, subcategorias, mídias e materiais promocionais impressos.
+O **Cardápio Digital** é um sistema composto por um cardápio digital voltado para os clientes, e por um painel de administração robusto voltado para os administradores gerenciarem pratos, categorias, subcategorias, mídias e materiais promocionais impressos.
 
 ### Diretrizes de Design (Art Déco Premium)
 A interface pública segue uma estética **Art Déco corporativa e luxuosa** de alta fidelidade:
-* **Paleta de Cores HSL:**
+* **Paleta de Cores Padrão:**
   * Azul Marinho Escuro (`#141D55` / `--navy-dark`): Fundo principal do cabeçalho, rodapé e menus.
   * Azul Marinho Primário (`#1E2A7A` / `--navy`): Borda superior de cartões, títulos e botões principais.
   * Azul Marinho Médio (`#2A3A9E` / `--navy-mid`): Estados de hover de botões e links ativos.
@@ -88,7 +88,7 @@ O menu digital é estruturado em exatamente 8 macro-categorias, dispostas pela o
 ## 4. Estrutura do Projeto (Árvore de Diretórios)
 
 ```text
-c:\cardapio_hsl
+c:\cardapio_online
 ├── dist/                   # Build final de produção otimizado para deploy
 ├── public/                 # Favicon, imagens estáticas e assets globais (logo.svg)
 ├── src/

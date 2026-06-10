@@ -1,10 +1,11 @@
 import React from 'react'
-import HotelLogo from './HotelLogo'
+import BrandLogo from './BrandLogo'
 import DecoOrnament from './DecoOrnament'
 
 export function DecoHeader() {
-  const hotelName = import.meta.env.VITE_HOTEL_NAME || 'Hotel São Luiz'
-  const restaurantName = import.meta.env.VITE_RESTAURANT_NAME || 'Restaurante Don Fernando'
+  const hotelName = import.meta.env.VITE_HOTEL_NAME || 'Nome do Estabelecimento'
+  const restaurantName = import.meta.env.VITE_RESTAURANT_NAME || 'Restaurante Principal'
+  const restaurantSubtitle = import.meta.env.VITE_RESTAURANT_SUBTITLE || 'Gastronomia & Tradição'
 
   return (
     <header
@@ -18,9 +19,9 @@ export function DecoHeader() {
         textAlign: 'center',
       }}
     >
-      {/* 2. HotelLogo size=104 with gold border, centered, mb 10px */}
+      {/* 2. BrandLogo size=104 with gold border, centered, mb 10px */}
       <div style={{ marginBottom: '10px' }}>
-        <HotelLogo size={104} borderColor="var(--gold)" />
+        <BrandLogo size={104} borderColor="var(--gold)" />
       </div>
 
       {/* 3. HOTEL SÃO LUIZ: font-ui, 11px, letter-spacing 0.35em, gold, uppercase */}
@@ -58,7 +59,7 @@ export function DecoHeader() {
         {restaurantName}
       </h1>
 
-      {/* 6. Gastronomia & Tradição: font-ui, 11px, letter-spacing 0.3em, gold, uppercase */}
+      {/* 6. Subtítulo: font-ui, 11px, letter-spacing 0.3em, gold, uppercase */}
       <p
         style={{
           fontFamily: 'var(--font-ui)',
@@ -71,7 +72,7 @@ export function DecoHeader() {
           paddingLeft: '0.3em', // offset right padding to keep perfectly centered
         }}
       >
-        Gastronomia & Tradição
+        {restaurantSubtitle}
       </p>
 
       {/* 7. Geometric strip: Symmetrical 1px lines + three 45-deg rotated 5px squares (diamonds) */}

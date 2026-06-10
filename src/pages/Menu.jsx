@@ -297,7 +297,7 @@ export function Menu() {
             margin: 0,
           }}
         >
-          © {new Date().getFullYear()} {import.meta.env.VITE_HOTEL_NAME || 'Hotel São Luiz'}. Todos os direitos reservados.
+          © {new Date().getFullYear()} {import.meta.env.VITE_HOTEL_NAME || 'Nome do Estabelecimento'}. Todos os direitos reservados.
         </p>
 
         <p

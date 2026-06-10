@@ -8,7 +8,7 @@ import { useCategories } from '../hooks/useCategories'
 import { QRCodeDisplay } from '../components/shared/QRCodeDisplay'
 import { ProductForm } from '../components/admin/ProductForm'
 import { ConfirmDialog } from '../components/admin/ConfirmDialog'
-import HotelLogo from '../components/menu/HotelLogo'
+import BrandLogo from '../components/menu/BrandLogo'
 import { Link } from 'react-router-dom'
 import { 
   LogOut, 
@@ -472,14 +472,14 @@ export function Admin() {
       <header className="bg-navy-dark text-white px-6 py-4 flex justify-between items-center shadow-md">
         <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
           <div className="p-0.5 border border-gold rounded-full bg-navy-dark">
-            <HotelLogo size={42} borderColor="var(--gold)" />
+            <BrandLogo size={42} borderColor="var(--gold)" />
           </div>
           <div>
             <h1 className="text-sm font-semibold tracking-wide font-display text-ivory">
               Painel Administrativo
             </h1>
             <p className="text-[10px] text-gold tracking-widest uppercase">
-              Restaurante Don Fernando
+              {import.meta.env.VITE_RESTAURANT_NAME || 'Restaurante Principal'}
             </p>
           </div>
         </Link>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import HotelLogo from '../components/menu/HotelLogo'
+import BrandLogo from '../components/menu/BrandLogo'
 import { Loader2, KeyRound, Mail, AlertCircle } from 'lucide-react'
 
 export function Login() {
@@ -30,7 +30,7 @@ export function Login() {
     // Automatically append default domain if user typed a simple username
     let finalEmail = email.trim()
     if (!finalEmail.includes('@')) {
-      finalEmail = `${finalEmail}@hotelsaoluiz.com`
+      finalEmail = `${finalEmail}@admin.com`
     }
 
     setSubmitting(true)
@@ -56,13 +56,13 @@ export function Login() {
         {/* Branding header */}
         <div className="flex flex-col items-center mb-8">
           <div className="p-1 border border-gold rounded-full mb-3 bg-navy-dark">
-            <HotelLogo size={60} borderColor="var(--gold)" />
+            <BrandLogo size={60} borderColor="var(--gold)" />
           </div>
           <h1 className="text-xl font-display font-semibold text-ivory tracking-wide">
             Administração do Cardápio
           </h1>
           <p className="text-xs text-gold font-ui tracking-widest uppercase mt-1">
-            Restaurante Don Fernando
+            {import.meta.env.VITE_RESTAURANT_NAME || 'Restaurante Principal'}
           </p>
         </div>
 

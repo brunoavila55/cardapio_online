@@ -4,7 +4,7 @@ import { Download, Smartphone, Printer, Award, Loader2 } from 'lucide-react'
 
 export function QRCodeDisplay() {
   const menuUrl = window.location.origin
-  const hotelName = import.meta.env.VITE_HOTEL_NAME || 'Hotel São Luiz'
+  const hotelName = import.meta.env.VITE_HOTEL_NAME || 'Nome do Estabelecimento'
   
   const [activeTab, setActiveTab] = useState('qr') // 'qr' | 'acrylic' | 'wall'
   const [isGenerating, setIsGenerating] = useState(null)
@@ -129,7 +129,7 @@ export function QRCodeDisplay() {
       // ACRYLIC poster text (Mesa)
       ctx.font = 'italic 28px Georgia, serif'
       ctx.fillStyle = '#C9A84C' // Gold subtitle
-      ctx.fillText('Restaurante Don Fernando', width / 2, 280)
+      ctx.fillText(import.meta.env.VITE_RESTAURANT_NAME || 'Restaurante Principal', width / 2, 280)
       
       ctx.font = 'bold 46px "Inter", "Arial", sans-serif'
       ctx.fillStyle = '#F5F3EE' // Ivory
@@ -158,7 +158,7 @@ export function QRCodeDisplay() {
       
       ctx.font = 'italic 38px Georgia, serif'
       ctx.fillStyle = '#F5F3EE'
-      ctx.fillText('Restaurante Don Fernando', width / 2, 520)
+      ctx.fillText(import.meta.env.VITE_RESTAURANT_NAME || 'Restaurante Principal', width / 2, 520)
       
       // Draw gold diamond divider
       drawDiamondDivider(ctx, width / 2, 570, 300)

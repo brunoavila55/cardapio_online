@@ -1,16 +1,39 @@
-# React + Vite
+# Cardápio Digital (White Label)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este é um boilerplate para um sistema de Cardápio Digital com painel administrativo integrado. Ele foi construído utilizando React, Vite e Supabase, sendo facilmente configurável para uso em qualquer restaurante, bar ou hotel.
 
-Currently, two official plugins are available:
+## Tecnologias
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Frontend:** React 18, Vite, Tailwind CSS (para admin), Vanilla CSS (para UI pública)
+- **Backend/Database:** Supabase (PostgreSQL)
+- **State Management:** TanStack React Query v5
+- **Deploy:** Configurado para Cloudflare Pages
 
-## React Compiler
+## Como rodar o projeto
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. Renomeie `.env.example` para `.env` (ou crie um) e adicione suas credenciais do Supabase:
+```env
+VITE_SUPABASE_URL=sua_url_aqui
+VITE_SUPABASE_ANON_KEY=sua_chave_aqui
+VITE_RESTAURANT_NAME="Nome do Seu Restaurante"
+```
 
-## Expanding the ESLint configuration
+2. Instale as dependências:
+```bash
+npm install
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+3. Execute o script de seeder para popular o banco de dados (certifique-se de que o Supabase está configurado com RLS correto ou use a Service Role Key provisoriamente):
+```bash
+node seeder.js
+```
+*(As credenciais padrão de admin geradas serão admin@admin.com / admin123)*
+
+4. Inicie o servidor de desenvolvimento:
+```bash
+npm run dev
+```
+
+## Configuração White Label
+
+Este projeto é genérico. Para alterar as logomarcas, basta substituir os arquivos `logo.svg` em `public/` ou alterar os componentes de imagem conforme sua necessidade. O nome exibido e os fallbacks podem ser alterados através das variáveis de ambiente.

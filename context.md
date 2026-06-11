@@ -36,20 +36,26 @@ A interface pública segue uma estética **Art Déco corporativa e luxuosa** de 
 * **React Router v7**: Controle de rotas client-side (`createBrowserRouter`).
 
 ### Estado & Banco de Dados
-* **Supabase Client (`@supabase/supabase-js`)**: Integração de banco de dados PostgreSQL e autenticação em tempo real.
-* **TanStack React Query v5**: Gerenciamento de estado de servidor, cache, invalidação de queries e sincronização offline-first de dados.
+* **Node.js & Express**: Servidor backend responsável pela API REST, rotas protegidas e middleware de autenticação (JWT).
+* **Prisma ORM**: Modelagem e queries seguras ao banco de dados PostgreSQL.
+* **TanStack React Query v5**: Gerenciamento de estado de servidor, cache e invalidação de queries no frontend.
 * **React Hook Form & Zod**: Para validação estrita baseada em schemas e controle tipado dos formulários do administrador.
 
+### Roteamento Wildcard & Subdomínios
+* O sistema opera com roteamento condicional via **subdomínios** gerenciado pelo frontend (`src/lib/tenant.js`).
+* **Root Domain (`subdominio.com.br`)**: Serve exclusivamente para o acesso Master (Super Admin), nas rotas `/` (Login Master) e `/superadmin`.
+* **Tenant Subdomain (`tenant.subdominio.com.br`)**: Redireciona para as rotas da loja. O slug do tenant é extraído e injetado via header HTTP `X-Tenant-Slug` em todas as requests ao backend.
+* **Localhost**: Para testes, o sistema suporta sufixos `.localhost` (ex: `loja.localhost:5173`). Exige configuração do arquivo `hosts` apontando para `127.0.0.1`.
+
 ### Ferramentas Auxiliares
-* **qrcode.react**: Para renderização de tela e geração da matriz matemática dos QR Codes dinâmicos.
 * **Lucide React**: Biblioteca de ícones vetoriais padronizados.
-* **Wrangler / Cloudflare Pages**: Plataforma de deploy e hospedagem de alta performance sob CDN global.
+* **Nginx / Cloudflare Pages**: Deploy híbrido suportado. Nginx (server blocks com wildcard certs) ou Cloudflare Pages (com interceptação via _routes.json e worker.js).
 
 ---
 
-## 3. Arquitetura do Banco de Dados (PostgreSQL / Supabase)
+## 3. Arquitetura do Banco de Dados (PostgreSQL / Prisma)
 
-O banco de dados armazena informações relacionais em duas tabelas centrais integradas com políticas de RLS (Row Level Security):
+O banco de dados armazena informações relacionais através do ORM Prisma. O sistema é multitenant e isola os dados por `tenant_id`:
 
 ### Tabela `categories` (Categorias de Menu)
 Representa as grandes divisões do cardápio (ex: Bebidas, Carnes, Sobremesas).
@@ -135,9 +141,8 @@ c:\cardapio_online
 ### A. Reordenação de Subcategorias Sem Nova Tabela
 Como as subcategorias são armazenadas implicitamente no campo `subcategory` dos produtos, a reordenação das subcategorias é gerenciada em lote:
 1. Quando o administrador move uma subcategoria para cima ou para baixo no painel admin, a aplicação calcula novos valores de `display_order` para todos os produtos pertencentes àquela subcategoria.
-2. É disparada uma transação única de lote `supabase.upsert` contendo todos os produtos carregados daquela categoria modificada.
-3. Para respeitar as constraints do banco de dados (que exige campos obrigatórios como `name` e `price` no upsert), o payload é gerado desestruturando o produto original completo `{ ...p, display_order: novoValor }`.
-4. No front-end do hóspede (`Menu.jsx`), a ordenação secundária das abas (`activeSubcategories`) e o agrupamento são calculados dinamicamente em tempo real usando o valor mínimo de `display_order` dos produtos dentro de cada subcategoria.
+2. É disparada uma requisição em lote para a API, que por sua vez executa uma transação Prisma atualizando a ordenação dos produtos.
+3. No front-end do hóspede (`Menu.jsx`), a ordenação secundária das abas (`activeSubcategories`) e o agrupamento são calculados dinamicamente em tempo real usando o valor mínimo de `display_order` dos produtos dentro de cada subcategoria.
 
 ### B. Reordenação Sem Colisão de Categorias Principais
 Para evitar a inserção manual de números que causem duplicidades de ordem no banco de dados, o painel administrativo adota um controle de cliques sequenciais:
@@ -171,5 +176,6 @@ Para prover uma ótima experiência móvel sem descaracterizar a exibição em m
      ```powershell
      npm.cmd run deploy
      ```
-4. **Preservação de RLS e Integridade:**
-   * Qualquer exclusão em lote ou alteração estrutural no Supabase deve passar pelas camadas normais de mutação das API hooks de forma a invalidar as queries do TanStack Query no sucesso, garantindo reatividade instantânea no painel administrativo e no cardápio público dos clientes.
+4. **Segurança de Tenants e Impersonation:**
+   * O backend (Node.js) confia no JWT e compara o `X-Tenant-Slug` recebido com o token autenticado no middleware `requireTenant.js`.
+   * Super Admins têm permissão de bypass para gerenciar todos os tenants e utilizar impersonation.

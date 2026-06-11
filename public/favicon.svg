@@ -1,23 +1,6 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="100%" height="100%" viewBox="0 0 5000 5000" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-    <g transform="matrix(0.947368,0,0,0.947368,212.863923,201.058551)">
-        <circle cx="2414.199" cy="2426.66" r="2205.585" style="fill:rgb(30,42,122);"/>
-    </g>
-    <g transform="matrix(1.181989,0,0,1.181989,-1783.317215,-1099.259126)">
-        <path d="M3623.822,1251.682C4613.63,1251.682 5417.227,2055.28 5417.227,3045.087C5417.227,4034.895 4613.63,4838.493 3623.822,4838.493C2634.015,4838.493 1830.417,4034.895 1830.417,3045.087C1830.417,2055.28 2634.015,1251.682 3623.822,1251.682ZM3623.822,1328.543C2676.435,1328.543 1907.277,2097.701 1907.277,3045.087C1907.277,3992.474 2676.435,4761.632 3623.822,4761.632C4571.209,4761.632 5340.367,3992.474 5340.367,3045.087C5340.367,2097.701 4571.209,1328.543 3623.822,1328.543Z" style="fill:rgb(245,243,238);"/>
-    </g>
-    <g transform="matrix(0.88809,0,0,0.88809,-81.001202,-232.219472)">
-        <path d="M1592.684,4751.009L1592.684,1402.015L2035.866,1402.015L2035.866,2777.25L3776.612,2777.25L3776.612,1402.015L4219.794,1402.015L4219.794,4751.009L3776.612,4751.009L3776.612,3172.459L2035.866,3172.459L2035.866,4751.009L1592.684,4751.009Z" style="fill:rgb(245,243,238);fill-rule:nonzero;"/>
-    </g>
-    <g transform="matrix(1,0,0,1,1719.539148,870.551869)">
-        <g transform="matrix(1550.118764,0,0,1550.118764,1303.096109,1270.87307)">
-        </g>
-        <text x="269.179px" y="1270.873px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:1550.119px;fill:rgb(245,243,238);">S</text>
-    </g>
-    <g transform="matrix(1.034106,0,0,1.034106,1745.753277,2492.383609)">
-        <g transform="matrix(1550.118764,0,0,1550.118764,1131.281187,1270.87307)">
-        </g>
-        <text x="269.179px" y="1270.873px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:1550.119px;fill:rgb(245,243,238);">L</text>
-    </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <rect width="500" height="500" fill="#141D55" rx="100" />
+  <circle cx="250" cy="250" r="150" fill="none" stroke="#C9A84C" stroke-width="20" />
+  <path d="M220 180 L220 320 M280 180 L280 320" stroke="#F5F3EE" stroke-width="24" stroke-linecap="round" />
+  <path d="M190 250 L310 250" stroke="#F5F3EE" stroke-width="24" stroke-linecap="round" />
 </svg>

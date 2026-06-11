@@ -27,14 +27,19 @@ function loadEnv() {
 const env = loadEnv()
 const supabaseUrl = env.VITE_SUPABASE_URL
 const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY
+const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY // Required for multitenant admin seeding bypass RLS
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Erro: VITE_SUPABASE_URL ou VITE_SUPABASE_ANON_KEY não definidos no seu arquivo .env!')
   process.exit(1)
 }
 
+if (!serviceRoleKey) {
+  console.warn('Aviso: SUPABASE_SERVICE_ROLE_KEY não encontrada no .env. Recomendamos usar a Service Role Key para rodar o seeder multitenant com permissão total de bypass de RLS.')
+}
+
 console.log('Iniciando conexão com o Supabase:', supabaseUrl)
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+const supabase = createClient(supabaseUrl, serviceRoleKey || supabaseAnonKey)
 
 // 2. Beautifully Consolidated 8 Macro-Categories (instead of 6)
 const categoriesData = [
@@ -231,76 +236,70 @@ const slugify = (text) => {
 
 async function run() {
   try {
-    let isAuthenticated = false
+    console.log('\n--- 0. PREPARANDO TENANTS (MULTITENANT) ---')
+    // Cuidaremos de 2 Tenants para teste
+    const tenantsData = [
+      { name: 'Don Fernando', slug: 'donfernando', primary_color: '#1E2A7A' },
+      { name: 'Pizzaria Napoli', slug: 'pizzarianapoli', primary_color: '#8A1515' }
+    ]
 
-    // Check if key is secret/service_role (bypasses RLS)
-    if (supabaseAnonKey.startsWith('sb_secret_') || supabaseAnonKey.includes('service_role')) {
-      console.log('Chave do tipo SECRET/SERVICE_ROLE detectada. A inserção ignorará as políticas RLS automaticamente.')
-      isAuthenticated = true
-    } else {
-      console.log('Chave do tipo PUBLISHABLE detectada. Tentando autenticação como administrador...')
-      
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: 'admin@admin.com',
-        password: 'admin123'
-      })
+    const createdTenants = []
 
-      if (authError) {
-        console.warn('Alerta: Não foi possível autenticar localmente:', authError.message)
-        console.log('Dica: Certifique-se de criar o usuário "admin@admin.com" com a senha "admin123" no painel Authentication do Supabase.')
-        console.log('Continuando tentativa direta no banco de dados (pode falhar se RLS estiver ativo)...')
+    for (const t of tenantsData) {
+      // Find or create
+      const { data: existingTenant, error: findTError } = await supabase
+        .from('tenants')
+        .select('*')
+        .eq('slug', t.slug)
+        .maybeSingle()
+
+      if (existingTenant) {
+        console.log(`[Tenant] "${t.name}" já existe.`)
+        createdTenants.push(existingTenant)
       } else {
-        console.log('Autenticação de administrador realizada com sucesso! Token de sessão obtido.')
-        isAuthenticated = true
+        const { data: newTenant, error: createTError } = await supabase
+          .from('tenants')
+          .insert([t])
+          .select()
+          .single()
+
+        if (createTError) throw new Error(`Erro ao criar tenant ${t.name}: ${createTError.message}`)
+        console.log(`[Tenant] "${t.name}" criado com sucesso!`)
+        createdTenants.push(newTenant)
       }
     }
 
-    console.log('\n--- 0. LIMPANDO BANCO DE DADOS (RESET COMPLETO) ---')
+    const primaryTenant = createdTenants.find(t => t.slug === 'donfernando')
+
+    console.log('\n--- 1. LIMPANDO DADOS ANTIGOS (RESET COMPLETO) ---')
     const { error: clearProductsError } = await supabase.from('products').delete().neq('id', '00000000-0000-0000-0000-000000000000')
     if (clearProductsError) throw new Error('Erro ao limpar produtos: ' + clearProductsError.message)
     
     const { error: clearCategoriesError } = await supabase.from('categories').delete().neq('id', '00000000-0000-0000-0000-000000000000')
     if (clearCategoriesError) throw new Error('Erro ao limpar categorias: ' + clearCategoriesError.message)
     
-    console.log('Banco de dados limpo com sucesso!')
+    console.log('Banco de dados de produtos/categorias limpo com sucesso!')
 
-    console.log('\n--- 1. CADASTRANDO CATEGORIAS ---')
+    console.log('\n--- 2. CADASTRANDO CATEGORIAS ---')
     const categoryMap = {}
 
     for (const cat of categoriesData) {
       const slug = slugify(cat.name)
       
-      // Check if category already exists to avoid duplicates
-      const { data: existing, error: findError } = await supabase
+      const { data: created, error: createError } = await supabase
         .from('categories')
-        .select('*')
-        .eq('slug', slug)
-        .maybeSingle()
+        .insert([{ name: cat.name, slug, display_order: cat.order, tenant_id: primaryTenant.id }])
+        .select()
+        .single()
 
-      if (existing) {
-        console.log(`[Categoria] "${cat.name}" já cadastrada. Atualizando display_order...`)
-        const { error: updateError } = await supabase
-          .from('categories')
-          .update({ display_order: cat.order })
-          .eq('id', existing.id)
-        
-        categoryMap[cat.name] = existing.id
-      } else {
-        const { data: created, error: createError } = await supabase
-          .from('categories')
-          .insert([{ name: cat.name, slug, display_order: cat.order }])
-          .select()
-          .single()
-
-        if (createError) {
-          throw new Error(`Erro ao criar categoria "${cat.name}": ${createError.message}`)
-        }
-        console.log(`[Categoria] "${cat.name}" criada com sucesso!`)
-        categoryMap[cat.name] = created.id
+      if (createError) {
+        throw new Error(`Erro ao criar categoria "${cat.name}": ${createError.message}`)
       }
+      console.log(`[Categoria] "${cat.name}" criada com sucesso!`)
+      categoryMap[cat.name] = created.id
     }
 
-    console.log('\n--- 2. CADASTRANDO PRODUTOS ---')
+    console.log('\n--- 3. CADASTRANDO PRODUTOS ---')
     let totalInserted = 0
 
     for (const categoryName of Object.keys(productsData)) {
@@ -313,51 +312,37 @@ async function run() {
       const productsList = productsData[categoryName]
       console.log(`\nInserindo pratos para Categoria "${categoryName}" (total: ${productsList.length})...`)
 
-      for (const prod of productsList) {
-        // Check if product already exists to avoid duplication
-        const { data: existing, error: findError } = await supabase
-          .from('products')
-          .select('*')
-          .eq('name', prod.name)
-          .eq('category_id', categoryId)
-          .maybeSingle()
+      const insertBatch = productsList.map(prod => ({
+        tenant_id: primaryTenant.id,
+        category_id: categoryId,
+        name: prod.name,
+        price: prod.price,
+        description: prod.description || '',
+        subcategory: prod.subcategory || '',
+        available: true,
+        display_order: 0
+      }))
 
-        if (existing) {
-          console.log(`  [Produto] "${prod.name}" já cadastrado. Atualizando preço e subcategoria...`)
-          await supabase
-            .from('products')
-            .update({
-              price: prod.price,
-              description: prod.description || '',
-              subcategory: prod.subcategory || ''
-            })
-            .eq('id', existing.id)
-          continue
-        }
+      const { error: insertError } = await supabase.from('products').insert(insertBatch)
 
-        const { error: insertError } = await supabase
-          .from('products')
-          .insert([{
-            category_id: categoryId,
-            name: prod.name,
-            price: prod.price,
-            description: prod.description || '',
-            subcategory: prod.subcategory || '',
-            available: true,
-            display_order: 0
-          }])
-
-        if (insertError) {
-          console.error(`  [Erro] Falha ao cadastrar "${prod.name}":`, insertError.message)
-        } else {
-          console.log(`  [Produto] "${prod.name}" cadastrado - R$ ${prod.price.toFixed(2)}`)
-          totalInserted++
-        }
+      if (insertError) {
+        console.error(`  [Erro] Falha ao cadastrar produtos de ${categoryName}:`, insertError.message)
+      } else {
+        console.log(`  [Sucesso] ${insertBatch.length} produtos cadastrados para ${categoryName}`)
+        totalInserted += insertBatch.length
       }
     }
 
+    // Attempt to create user or update user's raw_user_meta_data for the tenant
+    console.log('\n--- 4. CONFIGURANDO ADMIN USER ---')
+    // Since we don't have Supabase admin auth context directly here easily without admin key,
+    // we'll just log the instructions to properly set up the user in Supabase Studio.
+    console.log('IMPORTANTE: Para que o painel Admin funcione para o Tenant "Don Fernando",')
+    console.log('você deve criar um usuário em Authentication (ex: admin@donfernando.com) e atualizar seu user_metadata para:')
+    console.log(`{ "tenant_id": "${primaryTenant.id}" }`)
+
     console.log(`\n🎉 SEEDING CONCLUÍDO COM SUCESSO!`)
-    console.log(`Total de novas categorias inseridas/verificadas: ${categoriesData.length}`)
+    console.log(`Total de novas categorias inseridas: ${categoriesData.length}`)
     console.log(`Total de novos produtos inseridos com sucesso: ${totalInserted}`)
 
   } catch (err) {

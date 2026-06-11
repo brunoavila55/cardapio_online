@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useCurrentTenant } from '../hooks/useCurrentTenant'
 import { useCategories } from '../hooks/useCategories'
 import { useProducts } from '../hooks/useProducts'
 import DecoHeader from '../components/menu/DecoHeader'
@@ -9,8 +10,13 @@ import SectionDivider from '../components/menu/SectionDivider'
 import ProductCard from '../components/menu/ProductCard'
 
 export function Menu() {
-  const { categories, isLoading: isLoadingCategories, error: errorCategories } = useCategories()
-  const { products, isLoading: isLoadingProducts, error: errorProducts } = useProducts()
+  const { tenant, isLoading: isTenantLoading, error: tenantError } = useCurrentTenant()
+  
+  // Se não tem tenant e não está carregando, não passamos ID (os hooks retornarão array vazio)
+  const tenantId = tenant?.id
+
+  const { categories, isLoading: isLoadingCategories, error: errorCategories } = useCategories(tenantId)
+  const { products, isLoading: isLoadingProducts, error: errorProducts } = useProducts(tenantId)
   
   const [activeCategoryId, setActiveCategoryId] = useState('')
   const [activeSubcategory, setActiveSubcategory] = useState('')
@@ -21,6 +27,15 @@ export function Menu() {
       setActiveCategoryId(categories[0].id)
     }
   }, [categories, activeCategoryId])
+
+  // Inject Custom Tenant Styles (Colors) dynamically to the document root
+  useEffect(() => {
+    if (tenant?.primary_color) {
+      document.documentElement.style.setProperty('--navy', tenant.primary_color)
+    } else {
+      document.documentElement.style.removeProperty('--navy')
+    }
+  }, [tenant?.primary_color])
 
   // Get active products for the currently selected category to calculate its subcategories
   const getActiveProductsOfSelectedCategory = () => {
@@ -82,9 +97,9 @@ export function Menu() {
     }
   }
 
-  const isLoading = isLoadingCategories || isLoadingProducts
+  const isLoading = isLoadingCategories || isLoadingProducts || isTenantLoading
   // Silent error state for client: no raw logs or stacks, just a clean empty cardapio state
-  const hasError = errorCategories || errorProducts
+  const hasError = errorCategories || errorProducts || tenantError || (!isTenantLoading && !tenant)
 
   // Group products of a category by subcategory
   const getGroupedProductsByCategory = (categoryId) => {
@@ -134,7 +149,7 @@ export function Menu() {
       }}
     >
       {/* 1. DecoHeader at the top */}
-      <DecoHeader />
+      <DecoHeader tenant={tenant} />
 
       {/* 2. Sticky Double-Decker Navbars */}
       <div

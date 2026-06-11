@@ -1,81 +1,59 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '../lib/supabase'
+import { apiFetch } from '../lib/api'
 
 // Fetch all categories
-const fetchAllCategories = async () => {
-  const { data, error } = await supabase
-    .from('categories')
-    .select('*')
-    .order('display_order', { ascending: true })
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    throw new Error(error.message)
-  }
-  return data
+const fetchAllCategories = async (tenantId) => {
+  if (!tenantId) return []
+  return apiFetch(`/categories?tenant_id=${tenantId}`)
 }
 
-export function useCategories() {
+export function useCategories(tenantId) {
   const queryClient = useQueryClient()
 
   // Query to get all categories
   const { data: categories = [], isLoading, error } = useQuery({
-    queryKey: ['categories'],
-    queryFn: fetchAllCategories,
+    queryKey: ['categories', tenantId],
+    queryFn: () => fetchAllCategories(tenantId),
+    enabled: !!tenantId,
   })
 
   // Mutation to create a category
   const createMutation = useMutation({
     mutationFn: async (newCategory) => {
-      const { data, error } = await supabase
-        .from('categories')
-        .insert([newCategory])
-        .select()
-        .single()
-
-      if (error) throw new Error(error.message)
-      return data
+      return apiFetch('/categories', {
+        method: 'POST',
+        body: JSON.stringify(newCategory)
+      })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] })
+      queryClient.invalidateQueries({ queryKey: ['categories', tenantId] })
     },
   })
 
   // Mutation to update a category
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...updates }) => {
-      const { data, error } = await supabase
-        .from('categories')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single()
-
-      if (error) throw new Error(error.message)
-      return data
+      return apiFetch(`/categories/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(updates)
+      })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] })
-      // Products might reference categories, invalidating both keeps it robust
-      queryClient.invalidateQueries({ queryKey: ['products'] })
+      queryClient.invalidateQueries({ queryKey: ['categories', tenantId] })
+      queryClient.invalidateQueries({ queryKey: ['products', tenantId] })
     },
   })
 
   // Mutation to delete a category
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      const { error } = await supabase
-        .from('categories')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw new Error(error.message)
-      return id
+      return apiFetch(`/categories/${id}`, {
+        method: 'DELETE'
+      })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] })
-      // Invalidate products too because deleting category sets category_id to null
-      queryClient.invalidateQueries({ queryKey: ['products'] })
+      queryClient.invalidateQueries({ queryKey: ['categories', tenantId] })
+      queryClient.invalidateQueries({ queryKey: ['products', tenantId] })
     },
   })
 

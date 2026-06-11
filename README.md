@@ -2,37 +2,52 @@
 
 Este é um boilerplate para um sistema de Cardápio Digital com painel administrativo integrado. Ele foi construído utilizando React, Vite e Supabase, sendo facilmente configurável para uso em qualquer restaurante, bar ou hotel.
 
-## Tecnologias
+## 🛠️ Stack Tecnológica
 
-- **Frontend:** React 18, Vite, Tailwind CSS (para admin), Vanilla CSS (para UI pública)
-- **Backend/Database:** Supabase (PostgreSQL)
-- **State Management:** TanStack React Query v5
-- **Deploy:** Configurado para Cloudflare Pages
+### Backend (Próprio)
+* **Node.js + Express**: Servidor HTTP robusto.
+* **Prisma ORM + PostgreSQL**: Banco de dados relacional e queries seguras com forte suporte a Multitenancy.
+* **Autenticação**: JWT e Bcrypt em API própria, com Middleware Global (`requireTenant.js`) isolando dados.
+* **Armazenamento**: Envio local via multer e gerenciamento nativo de assets estáticos (sem Supabase).
+* **Logging**: Monitoramento com `pino-http`.
+
+### Frontend
+* **Vite + React 18**: Alta performance e HMR.
+* **TailwindCSS**: Utilitários para o painel Admin.
+* **Vanilla CSS**: Estilo rígido Art Déco da área pública.
+* **React Query v5**: Gestão otimizada de estado assíncrono.
+* **Error Boundaries**: Proteção contra crashes e loading skeletons.
 
 ## Como rodar o projeto
 
-1. Renomeie `.env.example` para `.env` (ou crie um) e adicione suas credenciais do Supabase:
+O projeto agora foi refatorado e é composto por um servidor backend e a aplicação frontend.
+
+1. **Configuração do Backend:**
+Renomeie o `.env.example` dentro da pasta `backend/` para `.env` (ou crie um) e adicione suas credenciais do banco Postgres e JWT:
 ```env
-VITE_SUPABASE_URL=sua_url_aqui
-VITE_SUPABASE_ANON_KEY=sua_chave_aqui
-VITE_RESTAURANT_NAME="Nome do Seu Restaurante"
+DATABASE_URL="postgresql://user:password@localhost:5432/cardapio?schema=public"
+PORT=3000
+JWT_SECRET="seu-segredo-super-seguro"
 ```
 
-2. Instale as dependências:
+2. **Instalar dependências e iniciar o banco:**
+No terminal, entre na pasta backend:
 ```bash
+cd backend
 npm install
-```
-
-3. Execute o script de seeder para popular o banco de dados (certifique-se de que o Supabase está configurado com RLS correto ou use a Service Role Key provisoriamente):
-```bash
-node seeder.js
-```
-*(As credenciais padrão de admin geradas serão admin@admin.com / admin123)*
-
-4. Inicie o servidor de desenvolvimento:
-```bash
+npx prisma migrate dev
 npm run dev
 ```
+
+3. **Configuração do Frontend:**
+No terminal da raiz do projeto, instale as dependências e inicie o Vite:
+```bash
+npm install
+npm run dev
+```
+
+4. **Testando a aplicação:**
+- Para criar o primeiro restaurante e testar, acesse o painel no navegador em `http://localhost:5173/register` ou clique em **Cadastre-se**.
 
 ## Configuração White Label
 

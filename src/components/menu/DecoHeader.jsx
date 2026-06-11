@@ -2,10 +2,10 @@ import React from 'react'
 import BrandLogo from './BrandLogo'
 import DecoOrnament from './DecoOrnament'
 
-export function DecoHeader() {
-  const hotelName = import.meta.env.VITE_HOTEL_NAME || 'Nome do Estabelecimento'
-  const restaurantName = import.meta.env.VITE_RESTAURANT_NAME || 'Restaurante Principal'
-  const restaurantSubtitle = import.meta.env.VITE_RESTAURANT_SUBTITLE || 'Gastronomia & Tradição'
+export function DecoHeader({ tenant }) {
+  const hotelName = import.meta.env.VITE_HOTEL_NAME || 'Cardápio Digital'
+  const restaurantName = tenant?.name || import.meta.env.VITE_RESTAURANT_NAME || 'Restaurante Principal'
+  const restaurantSubtitle = import.meta.env.VITE_RESTAURANT_SUBTITLE || 'Bem-vindo'
 
   return (
     <header
@@ -21,7 +21,7 @@ export function DecoHeader() {
     >
       {/* 2. BrandLogo size=104 with gold border, centered, mb 10px */}
       <div style={{ marginBottom: '10px' }}>
-        <BrandLogo size={104} borderColor="var(--gold)" />
+        <BrandLogo size={104} borderColor="var(--gold)" logoUrl={tenant?.logo_url} />
       </div>
 
       {/* 3. HOTEL SÃO LUIZ: font-ui, 11px, letter-spacing 0.35em, gold, uppercase */}

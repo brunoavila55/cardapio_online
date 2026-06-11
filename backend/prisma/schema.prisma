@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id            String     @id @default(uuid())
+  name          String
+  slug          String     @unique
+  logo_url      String?
+  primary_color String     @default("#1E2A7A")
+  status        String     @default("trial") // trial | active | suspended
+  plan          String     @default("free")  // free | starter | pro
+  trial_ends_at DateTime?
+  created_at    DateTime   @default(now())
+  
+  users         User[]
+  categories    Category[]
+  subcategories Subcategory[]
+  products      Product[]
+  onboarding    TenantOnboarding?
+
+  @@map("tenants")
+}
+
+model TenantOnboarding {
+  id                    String   @id @default(uuid())
+  tenant_id             String   @unique
+  has_created_category  Boolean  @default(false)
+  has_created_product   Boolean  @default(false)
+  has_customized_theme  Boolean  @default(false)
+  is_completed          Boolean  @default(false)
+  updated_at            DateTime @updatedAt
+
+  tenant                Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("tenant_onboarding")
+}
+
+model User {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  tenant_id  String
+  role       String   @default("owner") // owner | manager | viewer
+  created_at DateTime @default(now())
+
+  tenant     Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("users")
+}
+
+model Category {
+  id            String    @id @default(uuid())
+  tenant_id     String
+  name          String
+  slug          String
+  display_order Int       @default(0)
+  created_at    DateTime  @default(now())
+
+  tenant        Tenant    @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  products      Product[]
+  subcategories Subcategory[]
+
+  @@map("categories")
+}
+
+model Subcategory {
+  id            String    @id @default(uuid())
+  tenant_id     String
+  category_id   String
+  name          String
+  slug          String
+  display_order Int       @default(0)
+  created_at    DateTime  @default(now())
+
+  tenant        Tenant    @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  category      Category  @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  products      Product[]
+
+  @@map("subcategories")
+}
+
+model Product {
+  id            String   @id @default(uuid())
+  tenant_id     String
+  category_id   String
+  subcategory_id String?
+  name          String
+  description   String?
+  price         Float
+  image_url     String?
+  subcategory   String? // Legado, mantido para fallback temporário
+  available     Boolean  @default(true)
+  display_order Int      @default(0)
+  created_at    DateTime @default(now())
+
+  tenant        Tenant       @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  category      Category     @relation(fields: [category_id], references: [id], onDelete: Cascade)
+  subcategoryRel Subcategory? @relation(fields: [subcategory_id], references: [id], onDelete: SetNull)
+
+  @@map("products")
+}

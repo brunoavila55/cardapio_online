@@ -2,15 +2,20 @@ import React, { useEffect } from 'react'
 import { useNavigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 
-export function ProtectedRoute({ children }) {
+export function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate('/login', { replace: true })
+    if (!loading) {
+      if (!user) {
+        navigate('/login', { replace: true })
+      } else if (allowedRoles && !allowedRoles.includes(user.role)) {
+        // Redireciona para um fallback se não tiver a role necessária
+        navigate('/admin', { replace: true })
+      }
     }
-  }, [user, loading, navigate])
+  }, [user, loading, navigate, allowedRoles])
 
   if (loading) {
     return (
@@ -52,7 +57,14 @@ export function ProtectedRoute({ children }) {
     )
   }
 
-  // If we have a user, render either passed children or route outlet
-  return user ? (children ? children : <Outlet />) : null
+  // Se temos um usuário, checa as roles antes de renderizar
+  if (user) {
+    if (allowedRoles && !allowedRoles.includes(user.role)) {
+      return null // Ou pode retornar uma UI de "Acesso Negado"
+    }
+    return children ? children : <Outlet />
+  }
+  
+  return null
 }
 export default ProtectedRoute

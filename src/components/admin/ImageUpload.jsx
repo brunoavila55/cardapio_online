@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
+import { apiUpload } from '../../lib/api'
 
 // Helper function to resize and crop image to exactly 800x600 pixels (4:3 ratio) via HTML5 Canvas
 const resizeAndCropImage = (file, targetWidth = 800, targetHeight = 600) => {
@@ -81,28 +81,10 @@ export function ImageUpload({ value, onChange, disabled = false }) {
       // Automatically resize and crop image to exactly 800x600 pixels (4:3 ratio) for layout consistency
       const processedFile = await resizeAndCropImage(file, 800, 600)
 
-      const fileExt = 'jpg' // Output is always compressed JPEG
-      const fileName = `${Math.random().toString(36).substring(2, 15)}-${Date.now()}.${fileExt}`
-      const filePath = `products/${fileName}`
+      // Upload file to Node backend
+      const data = await apiUpload(processedFile)
 
-      // Upload file to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, processedFile, {
-          cacheControl: '3600',
-          upsert: false,
-        })
-
-      if (uploadError) {
-        throw uploadError
-      }
-
-      // Retrieve public url
-      const { data: { publicUrl } } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath)
-
-      onChange(publicUrl)
+      onChange(data.publicUrl)
     } catch (err) {
       console.error('Erro de upload:', err)
       setError(err.message || 'Erro ao enviar a imagem. Tente novamente.')

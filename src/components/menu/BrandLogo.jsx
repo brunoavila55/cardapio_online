@@ -1,8 +1,8 @@
 import React from 'react'
 
-export const BrandLogo = ({ size = 52 }) => (
+export const BrandLogo = ({ size = 52, logoUrl }) => (
   <img 
-    src="/logo.svg" 
+    src={logoUrl || "/logo.svg"} 
     alt="Logomarca do Estabelecimento" 
     width={size}
     height={size}

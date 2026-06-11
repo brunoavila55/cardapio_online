@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
-import { signIn as apiSignIn, signOut as apiSignOut } from '../lib/auth'
+import { apiFetch } from '../lib/api'
 
 const AuthContext = createContext({
   user: null,
@@ -14,32 +13,54 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Fetch initial active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
+    const token = localStorage.getItem('token')
+    if (token) {
+      // Validate session
+      apiFetch('/auth/me')
+        .then(data => {
+          setUser(data.user)
+          setLoading(false)
+        })
+        .catch(() => {
+          localStorage.removeItem('token')
+          setUser(null)
+          setLoading(false)
+        })
+    } else {
       setLoading(false)
-    }).catch(() => {
-      setLoading(false)
-    })
-
-    // Listen for auth changes dynamically
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    return () => {
-      subscription.unsubscribe()
     }
   }, [])
 
   const signIn = async (email, password) => {
     setLoading(true)
     try {
-      const data = await apiSignIn(email, password)
+      const data = await apiFetch('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
+      })
+      localStorage.setItem('token', data.token)
       setUser(data.user)
       return data
     } catch (err) {
+      setLoading(false)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const register = async (restaurantName, slug, email, password) => {
+    setLoading(true)
+    try {
+      const data = await apiFetch('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ restaurantName, slug, email, password })
+      })
+      localStorage.setItem('token', data.token)
+      setUser(data.user)
+      return data
+    } catch (err) {
+      setLoading(false)
       throw err
     } finally {
       setLoading(false)
@@ -48,19 +69,14 @@ export function AuthProvider({ children }) {
 
   const signOut = async () => {
     setLoading(true)
-    try {
-      await apiSignOut()
-      setUser(null)
-    } catch (err) {
-      throw err
-    } finally {
-      setLoading(false)
-    }
+    localStorage.removeItem('token')
+    setUser(null)
+    setLoading(false)
   }
 
   return React.createElement(
     AuthContext.Provider,
-    { value: { user, loading, signIn, signOut } },
+    { value: { user, loading, signIn, register, signOut } },
     children
   )
 }

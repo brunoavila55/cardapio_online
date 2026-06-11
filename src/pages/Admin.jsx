@@ -1,14 +1,14 @@
 import React, { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { createClient } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { apiFetch, apiDeleteUpload } from '../lib/api'
 import { useProducts } from '../hooks/useProducts'
 import { useCategories } from '../hooks/useCategories'
-import { QRCodeDisplay } from '../components/shared/QRCodeDisplay'
 import { ProductForm } from '../components/admin/ProductForm'
 import { ConfirmDialog } from '../components/admin/ConfirmDialog'
+import { TenantSettings } from '../components/admin/TenantSettings'
 import BrandLogo from '../components/menu/BrandLogo'
+import { OnboardingChecklist } from '../components/admin/OnboardingChecklist'
 import { Link } from 'react-router-dom'
 import { 
   LogOut, 
@@ -19,7 +19,6 @@ import {
   X, 
   Grid, 
   Utensils, 
-  QrCode, 
   Eye, 
   EyeOff, 
   Loader2,
@@ -27,7 +26,9 @@ import {
   Database,
   HardDrive,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Settings,
+  Shield
 } from 'lucide-react'
 
 // Helper to generate slug from name
@@ -44,13 +45,15 @@ const slugify = (text) => {
 }
 
 export function Admin() {
-  const { signOut } = useAuth()
-  const { products, createProduct, updateProduct, deleteProduct, isLoading: isLoadingProducts } = useProducts()
-  const { categories, createCategory, updateCategory, deleteCategory, isLoading: isLoadingCategories } = useCategories()
+  const { user, signOut } = useAuth()
+  const tenantId = user?.user_metadata?.tenant_id
+
+  const { products, createProduct, updateProduct, deleteProduct, isLoading: isLoadingProducts } = useProducts(tenantId)
+  const { categories, createCategory, updateCategory, deleteCategory, isLoading: isLoadingCategories } = useCategories(tenantId)
   
   const queryClient = useQueryClient()
 
-  const [activeTab, setActiveTab] = useState('products') // 'products' | 'categories' | 'qrcode'
+  const [activeTab, setActiveTab] = useState('products') // 'products' | 'categories'
 
   // States for Subcategories Management
   const [editingSubcat, setEditingSubcat] = useState(null) // { categoryId, name }
@@ -89,64 +92,11 @@ export function Admin() {
   const [showSqlInstructions, setShowSqlInstructions] = useState(false)
 
   const fetchStorageStats = async () => {
-    setIsStorageLoading(true)
-    try {
-      // 1. Try to get exact DB size via RPC if it exists
-      try {
-        const { data, error } = await supabase.rpc('get_db_size')
-        if (!error && data) {
-          setDbSizeExact(data.database_size_bytes || null)
-        } else {
-          setDbSizeExact(null)
-        }
-      } catch (err) {
-        setDbSizeExact(null)
-      }
-
-      // 2. Fetch storage files in 'products' directory
-      const { data: files, error: storageError } = await supabase.storage
-        .from('product-images')
-        .list('products', { limit: 1000 })
-
-      if (storageError) throw storageError
-
-      if (files) {
-        setStorageFiles(files)
-        const total = files.reduce((acc, f) => acc + (f.metadata?.size || f.size || 0), 0)
-        setTotalStorageSize(total)
-
-        // Find orphaned files (not referenced by any product image_url)
-        const productImages = products
-          .map((p) => p.image_url)
-          .filter(Boolean)
-
-        const orphaned = files.filter((f) => {
-          const fileFullPath = `products/${f.name}`
-          return !productImages.some((url) => url.includes(fileFullPath))
-        })
-        setOrphanedFiles(orphaned)
-      }
-    } catch (err) {
-      console.error('Erro ao buscar estatísticas de armazenamento:', err)
-    } finally {
-      setIsStorageLoading(false)
-    }
+    // Migrado para backend próprio, storage ilimitado/gerenciado via sistema de arquivos.
   }
 
   const handleCleanOrphanedFiles = async () => {
-    if (orphanedFiles.length === 0) return
-    setIsCleaningStorage(true)
-    try {
-      const pathsToDelete = orphanedFiles.map((f) => `products/${f.name}`)
-      const { error } = await supabase.storage.from('product-images').remove(pathsToDelete)
-      if (error) throw error
-      alert(`${orphanedFiles.length} imagens órfãs foram excluídas com sucesso para liberar espaço!`)
-      await fetchStorageStats()
-    } catch (err) {
-      alert('Erro ao excluir imagens órfãs: ' + err.message)
-    } finally {
-      setIsCleaningStorage(false)
-    }
+    // Feature desativada
   }
 
   React.useEffect(() => {
@@ -163,11 +113,7 @@ export function Admin() {
         // Edit flow - if image changed, delete old image from storage
         if (editingProduct.image_url && editingProduct.image_url !== formData.image_url) {
           try {
-            const parts = editingProduct.image_url.split('/product-images/')
-            if (parts.length > 1) {
-              const filename = parts[1]
-              await supabase.storage.from('product-images').remove([filename])
-            }
+            await apiDeleteUpload(editingProduct.image_url)
           } catch (storageErr) {
             console.error('Erro ao deletar imagem antiga do storage:', storageErr)
           }
@@ -175,7 +121,7 @@ export function Admin() {
         await updateProduct({ id: editingProduct.id, ...formData })
       } else {
         // Create flow
-        await createProduct(formData)
+        await createProduct({ ...formData, tenant_id: tenantId })
       }
       setIsProductModalOpen(false)
       setEditingProduct(null)
@@ -203,11 +149,7 @@ export function Admin() {
       // Delete associated image from storage if it exists
       if (deletingProduct.image_url) {
         try {
-          const parts = deletingProduct.image_url.split('/product-images/')
-          if (parts.length > 1) {
-            const filename = parts[1]
-            await supabase.storage.from('product-images').remove([filename])
-          }
+          await apiDeleteUpload(deletingProduct.image_url)
         } catch (storageErr) {
           console.error('Erro ao deletar imagem do storage:', storageErr)
         }
@@ -232,6 +174,7 @@ export function Admin() {
         name: newCatName.trim(),
         slug,
         display_order: parseInt(newCatOrder) || 0,
+        tenant_id: tenantId,
       })
       setNewCatName('')
       setNewCatOrder('0')
@@ -288,15 +231,18 @@ export function Admin() {
     if (!newName.trim() || oldName === newName.trim()) return
     setIsUpdatingSubcategory(true)
     try {
-      const { error } = await supabase
-        .from('products')
-        .update({ subcategory: newName.trim() })
-        .eq('category_id', categoryId)
-        .eq('subcategory', oldName)
+      await apiFetch('/products', {
+        method: 'PUT',
+        body: JSON.stringify({
+          action: 'rename_subcategory',
+          category_id: categoryId,
+          oldName,
+          newName: newName.trim()
+        })
+      })
 
-      if (error) throw error
       alert(`Subcategoria "${oldName}" renomeada para "${newName.trim()}" em todos os pratos!`)
-      await queryClient.invalidateQueries({ queryKey: ['products'] })
+      await queryClient.invalidateQueries({ queryKey: ['products', tenantId] })
     } catch (err) {
       alert('Erro ao renomear subcategoria: ' + err.message)
     } finally {
@@ -333,23 +279,22 @@ export function Admin() {
     }
     try {
       // 1. Delete ghost products for this subcategory
-      await supabase
-        .from('products')
-        .delete()
-        .eq('name', '__SUBCAT__')
-        .eq('category_id', categoryId)
-        .eq('subcategory', subcategoryName)
+      await apiFetch(`/products?name=__SUBCAT__&category_id=${categoryId}&subcategory=${encodeURIComponent(subcategoryName)}`, {
+        method: 'DELETE'
+      })
 
       // 2. Clear subcategory field for real products
-      const { error } = await supabase
-        .from('products')
-        .update({ subcategory: '' })
-        .eq('category_id', categoryId)
-        .eq('subcategory', subcategoryName)
+      await apiFetch('/products', {
+        method: 'PUT',
+        body: JSON.stringify({
+          action: 'clear_subcategory',
+          category_id: categoryId,
+          subcategoryName
+        })
+      })
 
-      if (error) throw error
       alert(`Subcategoria "${subcategoryName}" removida com sucesso!`)
-      await queryClient.invalidateQueries({ queryKey: ['products'] })
+      await queryClient.invalidateQueries({ queryKey: ['products', tenantId] })
     } catch (err) {
       alert('Erro ao excluir subcategoria: ' + err.message)
     }
@@ -400,14 +345,16 @@ export function Admin() {
       })
       
       if (updates.length > 0) {
-        const { error } = await supabase
-          .from('products')
-          .upsert(updates)
-          
-        if (error) throw error
+        await apiFetch('/products', {
+          method: 'PUT',
+          body: JSON.stringify({
+            action: 'upsert',
+            items: updates
+          })
+        })
       }
       
-      await queryClient.invalidateQueries({ queryKey: ['products'] })
+      await queryClient.invalidateQueries({ queryKey: ['products', tenantId] })
     } catch (err) {
       alert('Erro ao reordenar subcategorias: ' + err.message)
     } finally {
@@ -434,13 +381,12 @@ export function Admin() {
         display_order: idx + 1
       }))
       
-      const { error } = await supabase
-        .from('categories')
-        .upsert(updates)
-        
-      if (error) throw error
+      await apiFetch('/categories', {
+        method: 'PUT',
+        body: JSON.stringify(updates)
+      })
       
-      await queryClient.invalidateQueries({ queryKey: ['categories'] })
+      await queryClient.invalidateQueries({ queryKey: ['categories', tenantId] })
     } catch (err) {
       alert('Erro ao reordenar categorias: ' + err.message)
     } finally {
@@ -485,6 +431,15 @@ export function Admin() {
         </Link>
 
         <div className="flex items-center gap-4">
+          {user?.role === 'superadmin' && (
+            <Link
+              to="/superadmin"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-900/20 hover:bg-red-900/40 text-red-300 border border-red-900/30 hover:border-red-500 rounded-admin text-xs font-semibold transition-all"
+            >
+              <Shield className="w-3.5 h-3.5" />
+              Super Admin
+            </Link>
+          )}
           <a
             href="/"
             target="_blank"
@@ -527,15 +482,6 @@ export function Admin() {
             Categorias
           </button>
           <button
-            onClick={() => setActiveTab('qrcode')}
-            className={`w-full text-left px-4 py-3 rounded-admin text-xs uppercase tracking-widest font-semibold flex items-center gap-3 transition-colors ${
-              activeTab === 'qrcode' ? 'bg-navy text-white' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-            }`}
-          >
-            <QrCode className="w-4 h-4" />
-            QR Code
-          </button>
-          <button
             onClick={() => setActiveTab('storage')}
             className={`w-full text-left px-4 py-3 rounded-admin text-xs uppercase tracking-widest font-semibold flex items-center gap-3 transition-colors ${
               activeTab === 'storage' ? 'bg-navy text-white' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
@@ -544,10 +490,26 @@ export function Admin() {
             <HardDrive className="w-4 h-4" />
             Fotos & Mídia
           </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`w-full text-left px-4 py-3 rounded-admin text-xs uppercase tracking-widest font-semibold flex items-center gap-3 transition-colors ${
+              activeTab === 'settings' ? 'bg-navy text-white' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+            }`}
+          >
+            <Settings className="w-4 h-4" />
+            Configurações
+          </button>
         </aside>
 
         {/* Content Box */}
         <main className="flex-grow bg-white border border-slate-200 rounded-admin shadow-sm p-4 md:p-6 overflow-x-hidden">
+          <OnboardingChecklist onNavigate={setActiveTab} />
+          
+          {/* TAB: SETTINGS */}
+          {activeTab === 'settings' && (
+            <TenantSettings tenantId={tenantId} />
+          )}
+
           {/* TAB 1: PRODUCTS */}
           {activeTab === 'products' && (
             <div>
@@ -1028,14 +990,6 @@ export function Admin() {
               )}
             </div>
           )}
-
-          {/* TAB 3: QR CODE GENERATOR */}
-          {activeTab === 'qrcode' && (
-            <div className="w-full py-2">
-              <QRCodeDisplay />
-            </div>
-          )}
-
 
           {/* TAB 4: DATABASE & STORAGE */}
           {activeTab === 'storage' && (

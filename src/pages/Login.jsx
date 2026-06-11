@@ -16,7 +16,7 @@ export function Login() {
   // Redirect to admin panel if already authenticated
   useEffect(() => {
     if (!authLoading && user) {
-      navigate('/admin', { replace: true })
+      navigate('/superadmin', { replace: true })
     }
   }, [user, authLoading, navigate])
 
@@ -38,7 +38,7 @@ export function Login() {
 
     try {
       await signIn(finalEmail, password)
-      navigate('/admin', { replace: true })
+      navigate('/superadmin', { replace: true })
     } catch (err) {
       console.error('Erro de login:', err)
       setError(err.message || 'Credenciais inválidas. Tente novamente.')
@@ -110,6 +110,15 @@ export function Login() {
                 className="w-full pl-10 pr-3 py-2.5 bg-slate-950 border border-slate-800 rounded-admin text-white text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-slate-600 disabled:opacity-50"
               />
             </div>
+            <div className="flex justify-end mt-2">
+              <button
+                type="button"
+                onClick={() => navigate('/forgot-password')}
+                className="text-[10px] text-slate-400 hover:text-gold uppercase tracking-widest font-ui cursor-pointer transition-colors border-0 bg-transparent"
+              >
+                Esqueci a senha
+              </button>
+            </div>
           </div>
 
           <button
@@ -130,13 +139,25 @@ export function Login() {
         </form>
       </div>
 
-      {/* Back button to public menu */}
-      <button
-        onClick={() => navigate('/')}
-        className="mt-6 text-xs text-slate-500 hover:text-gold transition-colors font-ui tracking-wider uppercase bg-transparent border-0 cursor-pointer"
-      >
-        ← Voltar para o Cardápio Público
-      </button>
+      {/* Links */}
+      <div className="mt-6 flex flex-col items-center gap-3">
+        <p className="text-xs text-slate-500 font-ui">
+          Não tem uma conta?{' '}
+          <button
+            onClick={() => navigate('/register')}
+            className="text-gold hover:text-ivory transition-colors cursor-pointer bg-transparent border-0"
+          >
+            Cadastre-se
+          </button>
+        </p>
+
+        <button
+          onClick={() => navigate('/')}
+          className="text-xs text-slate-500 hover:text-gold transition-colors font-ui tracking-wider uppercase bg-transparent border-0 cursor-pointer"
+        >
+          ← Voltar para o Cardápio Público
+        </button>
+      </div>
     </div>
   )
 }
